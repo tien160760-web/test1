@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode, JwtPayload } from "jwt-decode";
-import { refreshAccessToken } from "@/src/lib/Refresh";
+import { refreshWithLock } from "@/src/lib/RefreshLock";
 // Hàm gọi API backend để lấy token mới
 // async function refreshAccessToken(token: JWT): Promise<JWT> {
 //     try {
@@ -49,12 +49,12 @@ export const authOptions: NextAuthOptions = {
                         password: credentials?.password,
                     }),
                 });
-                console.log('res', res); // lần 1
+                // console.log('res', res); // lần 
                 const token = await res.json();
-                console.log('provider', token); // lần 2: có exp định nghĩa từ backend
+                // console.log('provider', token); // lần 2: có exp định nghĩa từ backend
                 // Nếu login thành công backend trả về token
                 const decoded = jwtDecode<JwtPayload>(token.accessToken);
-                console.log('return: {', 'decode id', decoded, 'token', token, '}'); // lần 3
+                // console.log('return: {', 'decode id', decoded, 'token', token, '}'); // lần 3
                 if (res.ok && token) {
 
                     // Object trả về ở đây sẽ được truyền vào JWT callback phía dưới
@@ -75,8 +75,8 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         // 2. Xử lý JWT (Lưu token vào Cookie được mã hóa)
         async jwt({ token, user }) {
-            console.log('user', user) // lần 4: tất cả thằng nào return ở trên thì vào user hết
-            console.log('token', token)
+            // console.log('user', user) // lần 4: tất cả thằng nào return ở trên thì vào user hết
+            // console.log('token', token)
             // Initial sign in: user chỉ có dữ liệu ở lần đăng nhập đầu tiên
             if (user) {
                 token.id = user.id;
@@ -85,19 +85,33 @@ export const authOptions: NextAuthOptions = {
                 token.accessToken = user.accessToken;
                 token.refreshToken = user.refreshToken;
                 token.expiredTime = user.expiredTime ? user.expiredTime : 0;
-                console.log("JWT callback", { token, user }); //lần 5: đang bị trùng token.name và username (tức là có 2 fields)
+                // console.log("JWT callback", { token, user }); //lần 5: đang bị trùng token.name và username (tức là có 2 fields)
                 return token;
 
             }
 
-            // Các lần sau: Kiểm tra xem access token còn hạn không
-            console.log('token.expiredTime', token.expiredTime);
+            // console.log('token.expiredTime', token.expiredTime);
             if (Date.now() > token.expiredTime) {
                 console.log("chuẩn bị gọi refresh");
-                return refreshAccessToken(token);
+                try {
+                    const refreshed = await refreshWithLock(token);
+                    return {
+                        ...token,
+                        ...refreshed,
+                        error: undefined,
+                    };
+                } catch (error) {
+                    return {
+                        ...token,
+                        error: "Failed to refresh access token",
+                    };
+                }
             }
             console.log("token bình thường", token);
-            return token;
+            return {
+                ...token,
+                error: undefined,
+            }
         },
 
         // 3. Xử lý Session (Đẩy data từ JWT ra Client)
@@ -121,7 +135,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
-        maxAge: 60 * 60 // 1 hour
+        maxAge: 10 * 60 // 
     },
 };
 

@@ -33,7 +33,7 @@ export async function refreshAccessToken(token: JWT) {
       ...token,
       accessToken: refreshedTokens.accessToken,
       // Cập nhật thời gian hết hạn mới (giây)
-      accessTokenExpires: refreshedTokens.exp, 
+      expiredTime: refreshedTokens.exp, 
       // Nếu NestJS trả về Refresh Token mới (Rotating), hãy lấy nó. 
       // Nếu không, hãy giữ lại Refresh Token cũ.
       refreshToken: refreshedTokens.refreshToken ?? token.refreshToken,
