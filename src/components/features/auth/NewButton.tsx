@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { getSession, signOut, useSession } from "next-auth/react";
-import { refreshAccessToken } from "@/src/lib/Refresh";
 
 export default function UserApiCaller() {
     const { data: session } = useSession();
@@ -10,46 +9,53 @@ export default function UserApiCaller() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const callNestApi = async () => {
+    const callApi = async () => {
+        // 1. Chưa đăng nhập
+        if (!session) {
+            signOut({ callbackUrl: "/login" });
+            return;
+        }
+
+        // 2. RT hết hạn (NextAuth đã thử refresh nhưng thất bại)
+        if ((session as any).error === "RefreshAccessTokenError") {
+            setError("Phiên đăng nhập đã hết hạn. Đang chuyển hướng...");
+            setTimeout(() => signOut({ callbackUrl: "/login" }), 2000);
+            return;
+        }
+        console.log("session error:", session.error);
+        // 3. Session hợp lệ → gọi proxy (NextAuth tự lo refresh AT bên trong)
         setLoading(true);
         setError(null);
         setResult(null);
 
         try {
-            const response = await fetch("/api/user-proxy", {
-                method: "GET",
-                // cache: 'no-store' // Đảm bảo luôn lấy dữ liệu mới nhất nếu cần
-            });
-            if (!response.ok) {
-                throw new Error("Failed to fetch data");
-            }
-            const data = await response.json();
-            console.log("Phản hồi từ API Proxy:", data);
-            setResult(data.id);
-        } catch (error) {
-            console.error("Lỗi gọi API:", error);
-            setError("Không thể kết nối với máy chủ.");
-        } finally {
-            setLoading(false);
-        }
-    };
+            const response = await fetch("/api/user-proxy", { method: "GET" });
 
-    const callRefreshToken = async () => {
-        setLoading(true);
-        try {
-            const newSession = await getSession();
-            if (newSession && (newSession as any).error !== "RefreshAccessTokenError") {
-                setError(null);
-                refreshAccessToken(newSession.token.refreshToken);
-                callNestApi();
-            } else {
-                setError("Phiên đăng nhập đã hết hạn. Đang chuyển hướng...");
-                console.log('Phiên đăng nhập đã hết hạn. Đang chuyển hướng...himar');
-                setTimeout(() => signOut({ callbackUrl: '/login' }), 2000);
+            // 4. Proxy trả 401 với lỗi RT → signOut
+            console.log("response status:", response.status);
+            if (response.status === 401) {
+                const body = await response.json();
+                console.log("response body:", body);
+                if (body.error === "RefreshAccessTokenError") {
+                    setError("Phiên đăng nhập đã hết hạn. Đang chuyển hướng...");
+                    setTimeout(() => signOut({ callbackUrl: "/login" }), 2000);
+                    return;
+                }
+                if (body.error === "Unauthorized") {
+                    setError("Phiên đăng nhập đã hết hạn. Đang chuyển hướng...");
+                    setTimeout(() => signOut({ callbackUrl: "/login" }), 2000);
+                    return;
+                }
+                throw new Error("Unauthorized");
             }
-        } catch (error) {
-            console.error("Lỗi làm mới phiên:", error);
-            setError("Không thể làm mới phiên. Vui lòng đăng nhập lại.");
+
+            if (!response.ok) throw new Error("Failed to fetch data");
+
+            const data = await response.text();
+            setResult(data);
+        } catch (err) {
+            console.error("Lỗi gọi API:", err);
+            setError("Không thể kết nối với máy chủ.");
         } finally {
             setLoading(false);
         }
@@ -64,7 +70,7 @@ export default function UserApiCaller() {
 
             <div className="space-y-4">
                 <button
-                    onClick={callRefreshToken}
+                    onClick={callApi}
                     disabled={loading}
                     className={`w-full py-3 px-6 rounded-lg font-medium text-white shadow-md transition-all active:scale-95
             ${loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'}`}
