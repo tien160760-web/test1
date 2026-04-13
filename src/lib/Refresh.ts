@@ -2,6 +2,7 @@
 
 import { JWT } from "next-auth/jwt";
 import { refresh } from "next/cache";
+import { jwtDecode } from "jwt-decode";
 
 /**
  * Hàm này nhận vào token cũ, gọi sang NestJS để lấy token mới
@@ -28,12 +29,14 @@ export async function refreshAccessToken(token: JWT) {
     }
 
     console.log("=== Đã làm mới Access Token thành công ===", refreshedTokens);
-
+    const decoded = jwtDecode(refreshedTokens.accessToken);
+    console.log("decoded refresh", decoded);
+    const expiredTime = decoded.exp ? decoded.exp * 1000 : 0;
     return {
       ...token,
       accessToken: refreshedTokens.accessToken,
       // Cập nhật thời gian hết hạn mới (giây)
-      expiredTime: refreshedTokens.exp, 
+      expiredTime: expiredTime,
       // Nếu NestJS trả về Refresh Token mới (Rotating), hãy lấy nó. 
       // Nếu không, hãy giữ lại Refresh Token cũ.
       refreshToken: refreshedTokens.refreshToken ?? token.refreshToken,
