@@ -16,7 +16,6 @@ export default function LoginForm() {
     setIsLoading(true);
     setError("");
 
-    // Gọi trực tiếp hàm signIn của NextAuth (nó sẽ kích hoạt luồng gọi API Login ở Server mà bạn đã setup)
     const res = await signIn("credentials", {
       email,
       password,
@@ -28,7 +27,7 @@ export default function LoginForm() {
       setError("Sai email hoặc mật khẩu himar!");
       setIsLoading(false);
     } else {
-      router.push("/dashboard"); // Chuyển trang nếu thành công
+      router.push("/dashboard"); 
     }
   };
 

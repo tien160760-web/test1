@@ -18,10 +18,8 @@ export default function RegisterForm() {
     setError("");
 
     try {
-      // 1. Gọi Service để đăng ký
       await authService.register(formData);
 
-      // 2. Thành công thì gọi NextAuth để login luôn
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,

@@ -20,14 +20,38 @@ export interface CardDef {
 
     // quantity?: number; 
     sellValue?: number;
+    stats?: {
+        description?: string; // Mô tả ngắn gọn về chỉ số này
+        // Chiến đấu
+        healthPoint?: number;
+        attackPoint?: number;
+        defensePoint?: number;
+        attackSpeed?: number;
+        attackChance?: number;
+        attackType?: "melee" | "ranged" | "magic";
 
-    healthPoint?: number;
-    attackPoint?: number;
-    foodCost?: number; // villager need ? food
+        // Sinh tồn & Tiêu thụ
+        foodCost?: number;   // Dành cho Villager
+        foodValue?: number;  // Dành cho Food, Fish
 
-    foodValue?: number; // Số lương thực nó cung cấp - for type food 
-    durability?: number; // Độ bền - for type equipment
-    damage?: number; // Sát thương - for type equipment
+        // Công việc & Thời gian
+        workSpeed?: number;   // Dành cho Structure
+        exploreTime?: number; // Dành cho Location
+        craftTime?: number;   // Dành cho Idea
+        targetRecipeId?: string; // Dành cho Idea link với Recipe
+
+        // Độ bền, độ phá & Sức chứa
+        durability?: number;  // Dành cho Equipment, Structure
+        damage?: number;      // Dành cho Equipment, Structure
+        capacity?: number;    // Dành cho Structure (Kho bãi)
+
+        // Đặc biệt
+        isRaw?: boolean;      // Dành cho Food
+        exploreCount?: number;// Số lần còn lại của Location
+        spawnRate?: number;   // Tỷ lệ xuất hiện của Location
+        
+    }
+
 }
 
 
@@ -49,16 +73,16 @@ interface CardInstance {
 }
 
 export interface Recipe {
-    id : string;
+    id: string;
     inputs: string[];
-    output: string;
-    duration: number; 
+    output: string[];
+    duration: number;
     deletedId: string[];
 }
 
 interface CardStack {
     stackId: string;
-    stacks : CardInstance[];
+    stacks: CardInstance[];
     // rootCardId?: string;
 
     activeRecipe?: string;

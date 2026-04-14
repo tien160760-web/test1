@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import { getSession, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function UserApiCaller() {
     const { data: session } = useSession();
@@ -10,20 +10,17 @@ export default function UserApiCaller() {
     const [error, setError] = useState<string | null>(null);
 
     const callApi = async () => {
-        // 1. Chưa đăng nhập
         if (!session) {
             signOut({ callbackUrl: "/login" });
             return;
         }
 
-        // 2. RT hết hạn (NextAuth đã thử refresh nhưng thất bại)
         if ((session as any).error === "RefreshAccessTokenError") {
             setError("Phiên đăng nhập đã hết hạn. Đang chuyển hướng...");
             setTimeout(() => signOut({ callbackUrl: "/login" }), 2000);
             return;
         }
         console.log("session error:", session.error);
-        // 3. Session hợp lệ → gọi proxy (NextAuth tự lo refresh AT bên trong)
         setLoading(true);
         setError(null);
         setResult(null);
@@ -31,7 +28,6 @@ export default function UserApiCaller() {
         try {
             const response = await fetch("/api/user-proxy", { method: "GET" });
 
-            // 4. Proxy trả 401 với lỗi RT → signOut
             console.log("response status:", response.status);
             if (response.status === 401) {
                 const body = await response.json();
