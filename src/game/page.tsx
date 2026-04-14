@@ -2,26 +2,29 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-// Đã sửa lại đường dẫn này cho khớp với hình bạn chụp
+import { useSession } from 'next-auth/react';
 import Card from '@/components/game/Card'; 
 import { getSocket } from '@/services/socket';
 import { GameCard } from '@/types/game';
 
 export default function GameBoard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [cards, setCards] = useState<GameCard[]>([]);
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Kiểm tra token để bảo vệ bàn chơi
-    const token = localStorage.getItem('jwt_token');
-    if (!token) {
+    // Chờ NextAuth xác định trạng thái xong mới xử lý
+    if (status === 'loading') return;
+
+    // Chưa đăng nhập thì đá về login
+    if (status === 'unauthenticated') {
       router.push('/login');
       return;
     }
 
     // Khởi tạo Socket
-    const socket = getSocket();
+    const socket = getSocket(session?.token?.accessToken);
     socket.connect();
 
     // Lắng nghe dữ liệu
@@ -40,7 +43,16 @@ export default function GameBoard() {
       socket.off('card_moved');
       socket.disconnect();
     };
-  }, [router]);
+  }, [status, session, router]);
+
+  // Đang kiểm tra session thì hiển thị loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#f4e4bc] flex items-center justify-center">
+        <p className="text-amber-900 text-lg font-semibold">Đang tải bàn chơi...</p>
+      </div>
+    );
+  }
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     e.dataTransfer.setData('cardId', cardId);
@@ -72,7 +84,7 @@ export default function GameBoard() {
       prev.map(c => c.id === cardId ? { ...c, position: { x: newX, y: newY } } : c)
     );
 
-    const socket = getSocket();
+    const socket = getSocket(session?.token?.accessToken);
     socket.emit('move_card', { cardId, x: newX, y: newY });
   };
 

@@ -1,7 +1,7 @@
 // lib/authOptions.ts (hoặc file logic auth của bạn)
 
 import { JWT } from "next-auth/jwt";
-import { refresh } from "next/cache";
+// import { refresh } from "next/cache";
 import { jwtDecode } from "jwt-decode";
 
 /**

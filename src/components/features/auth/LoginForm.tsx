@@ -2,39 +2,37 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/services/api';
+import { signIn } from 'next-auth/react';
 
 export default function LoginForm() {
   const router = useRouter();
-  // 1. Đổi state username thành email
   const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
-      // 2. Gửi đúng trường "email" sang cho NestJS
-      const response = await apiClient.post('/auth/login', {
-        email, 
+      const res = await signIn('credentials', {
+        email,
         password,
+        redirect: false,
       });
 
-      //const token = response.data.access_token || response.data.token;
-      const token = response.data.accessToken;
-
-      if (token) {
-        localStorage.setItem('jwt_token', token);
-        router.push('/game');
+      if (res?.error) {
+        setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu!');
       } else {
-        setError('Không nhận được token từ server.');
+        router.push('/game');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Lỗi đăng nhập:', err);
-      // Hiển thị lỗi báo về từ NestJS cho người dùng dễ thấy
-      setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!');
+      setError('Đăng nhập thất bại. Vui lòng kiểm tra lại!');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -42,7 +40,6 @@ export default function LoginForm() {
     <form onSubmit={handleLogin} className="flex flex-col gap-4 max-w-sm w-full mx-auto p-6 bg-amber-50 border-2 border-amber-800 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-center text-amber-900">Đăng nhập Làng Việt</h2>
       
-      {/* Hiển thị lỗi (nếu có) */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
           {Array.isArray(error) ? error.join(', ') : error}
@@ -52,7 +49,7 @@ export default function LoginForm() {
       <div>
         <label className="block text-sm font-semibold text-amber-900 mb-1">Email</label>
         <input 
-          type="email" // 3. Ràng buộc đúng định dạng email ở phía HTML
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="nguoichoi@gmail.com"
@@ -74,10 +71,11 @@ export default function LoginForm() {
       </div>
 
       <button 
-        type="submit" 
-        className="mt-2 bg-amber-700 text-white font-bold py-2 px-4 rounded hover:bg-amber-800 transition shadow-md"
+        type="submit"
+        disabled={isLoading}
+        className="mt-2 bg-amber-700 text-white font-bold py-2 px-4 rounded hover:bg-amber-800 transition shadow-md disabled:opacity-50"
       >
-        Vào Làng
+        {isLoading ? 'Đang xử lý...' : 'Vào Làng'}
       </button>
     </form>
   );
