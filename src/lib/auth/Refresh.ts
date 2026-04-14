@@ -1,13 +1,6 @@
-// lib/authOptions.ts (hoặc file logic auth của bạn)
-
 import { JWT } from "next-auth/jwt";
-import { refresh } from "next/cache";
 import { jwtDecode } from "jwt-decode";
 
-/**
- * Hàm này nhận vào token cũ, gọi sang NestJS để lấy token mới
- * và trả về một object token đã được cập nhật.
- */
 export async function refreshAccessToken(token: JWT) {
   try {
 
@@ -17,7 +10,6 @@ export async function refreshAccessToken(token: JWT) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // Gửi refresh token mà bạn đã lưu trong session trước đó
         refreshToken: token.refreshToken,
       }),
     });
@@ -35,10 +27,7 @@ export async function refreshAccessToken(token: JWT) {
     return {
       ...token,
       accessToken: refreshedTokens.accessToken,
-      // Cập nhật thời gian hết hạn mới (giây)
       expiredTime: expiredTime,
-      // Nếu NestJS trả về Refresh Token mới (Rotating), hãy lấy nó. 
-      // Nếu không, hãy giữ lại Refresh Token cũ.
       refreshToken: refreshedTokens.refreshToken ?? token.refreshToken,
     };
   } catch (error) {
@@ -46,7 +35,7 @@ export async function refreshAccessToken(token: JWT) {
 
     return {
       ...token,
-      error: "RefreshAccessTokenError", // Đánh dấu lỗi để xử lý ở Client/Proxy
+      error: "RefreshAccessTokenError", 
     };
   }
 }

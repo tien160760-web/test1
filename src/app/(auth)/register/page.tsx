@@ -5,7 +5,6 @@ import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
 
 export default async function RegisterPage() {
-  // Gác cổng: Đã đăng nhập rồi thì không cho vào trang Đăng ký nữa
   const session = await getServerSession(authOptions);
   if (session) redirect("/dashboard");
 

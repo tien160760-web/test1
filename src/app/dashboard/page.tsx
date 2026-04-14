@@ -4,9 +4,7 @@ import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 import NewButton from "@/src/components/features/auth/NewButton";
 
 export default async function DashboardPage() {
-  // Lấy dữ liệu session ngay trên Server
   const session = await getServerSession(authOptions);
-  // Gác cổng: Nếu CHƯA đăng nhập thì đá văng về trang Login
   if (!session) {
     redirect("/login");
   }

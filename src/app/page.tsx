@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
 
 export default async function HomePage() {
-  // Lấy thông tin session để biết user đã đăng nhập chưa
   const session = await getServerSession(authOptions);
 
   return (
@@ -30,7 +29,6 @@ export default async function HomePage() {
         {/* Khối Nút bấm (Buttons) */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {session ? (
-            // NẾU ĐÃ ĐĂNG NHẬP
             <Link 
               href="/dashboard" 
               className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-md hover:shadow-xl transition-all flex items-center justify-center gap-2"
@@ -41,7 +39,6 @@ export default async function HomePage() {
               </svg>
             </Link>
           ) : (
-            // NẾU CHƯA ĐĂNG NHẬP
             <>
               <Link 
                 href="/login" 
