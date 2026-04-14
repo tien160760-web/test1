@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/src/services/auth.service";
+import { authService } from "@/services/auth.service";
 
 
 export default function RegisterForm() {

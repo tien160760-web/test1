@@ -1,7 +1,8 @@
-import LoginForm from "@/src/components/features/auth/LoginForm";
+// quy ước @ là alias trỏ đến thư mục src/ của dự án Next.js
+import LoginForm from "@/components/features/auth/LoginForm";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/src/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
 
 export default async function LoginPage() {

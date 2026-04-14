@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode, JwtPayload } from "jwt-decode";
-import { refreshWithLock } from "@/src/lib/RefreshLock";
+import { refreshWithLock } from "@/lib/RefreshLock";
 // Hàm gọi API backend để lấy token mới
 // async function refreshAccessToken(token: JWT): Promise<JWT> {
 //     try {
