@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Ép màu nền trắng để phá cái màu đen "ám quẻ" */
+body {
+  background-color: white !important;
+  color: black !important;
+}
